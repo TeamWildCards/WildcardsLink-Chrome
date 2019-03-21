@@ -1,0 +1,22 @@
+{
+  "name": "WildcardsLink for ChromeOS",
+  "description": "Connect Scratch 3.0 to a Wildcards Board.",
+  "version": "0.0.1",
+  "manifest_version": 2,
+
+  "sockets": {
+    "tcp": {
+      "connect": "*"
+    },
+
+    "tcpServer": {
+      "listen": "*"
+    }
+  },
+  
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  }
+}
