@@ -13,7 +13,9 @@
       "listen": "*"
     }
   },
-  
+  "permissions": [
+    "serial"
+  ],
   "app": {
     "background": {
       "scripts": ["background.js"]
