@@ -478,7 +478,7 @@ Board.prototype.digitalWrite = function(pin, value) {
 
 Board.prototype.playTone = function(pin, tone_command, frequency, duration) {
     console.log("Called play tone", pin, tone_command, frequency, duration);
-    this.sp.write([TONE_DATA,0,pin,frequency & 0x7F, (frequency>> 7) & 0x7F,duration & 0x7F,(duration >> 7) & 0x7F, END_SYSEX]);
+    this.sp.write([START_SYSEX, TONE_DATA, 0, pin, frequency & 0x7F, (frequency>> 7) & 0x7F, duration & 0x7F, (duration >> 7) & 0x7F, END_SYSEX]);
 };
 
 /**
