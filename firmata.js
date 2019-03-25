@@ -42,7 +42,8 @@ var PIN_MODE = 0xF4,
     STRING_DATA = 0x71,
     SYSTEM_RESET = 0xFF,
     PULSE_OUT = 0x73,
-    PULSE_IN = 0x74;
+    PULSE_IN = 0x74,
+    TONE_DATA = 0x5F;
 
     /**
      * MIDI_RESPONSE contains functions to be called when we receive a MIDI message from the arduino.
@@ -468,6 +469,19 @@ Board.prototype.digitalWrite = function(pin, value) {
 };
 
 /**
+ * Asks the arduino to play a tone for a set frequency and duration
+ * @param {number} pin The pin you want to write a value to
+ * @param {string} tone_command firmata plus based command
+ * @param {number} frequency the freqency that you want to tone to play at in Hz
+ * @param {number} duration how long your want to tone to play in seconds
+ */
+
+Board.prototype.playTone = function(pin, tone_command, frequency, duration) {
+    console.log("Called play tone", pin, tone_command, frequency, duration);
+    this.sp.write([TONE_DATA,0,pin,frequency & 0x7F, (frequency>> 7) & 0x7F,duration & 0x7F,(duration >> 7) & 0x7F, END_SYSEX]);
+};
+
+/**
  * Asks the arduino to read digital data
  * @param {number} pin The pin to read data from
  * @param {function} callback The function to call when data has been received
@@ -598,6 +612,7 @@ Board.prototype.pulseIn = function(opts, callback){
     this.sp.write(data);
     //this.once('pulse-in-'+pin,callback);
 };
+
 /**
  * Send SYSTEM_RESET to arduino
  */

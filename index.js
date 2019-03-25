@@ -97,6 +97,7 @@ function onChange(evt) {
   var command = target[0];
   var pin = parseInt(target[1], 10);
   var value = evt.target.checked ? 1 : 0;
+  var tone_command = target [1];
 
   console.log("onChange", command, pin, value);
 
@@ -192,12 +193,19 @@ if (http.Server && http.WebSocketServer) {
         //connectedSockets[i].send(e.data);
         //Parse the message and repackage to serial stream
         var msg = JSON.parse(e.data);
+        console.log("length: ",msg.params.length);
+        
+        for (i = 0; i < msg.params.length; i++) {
+          console.log(msg.params[i]);
+        }
+        
         switch (msg.method){
           case "set_pin_mode":
             console.log('Better');
             console.log(msg)
             pin = msg.params[0]
             value = msg.params[1]
+            console.log(value);
             board.pinMode(pin, value);
             break;
           case "digital_pin_write":
@@ -206,6 +214,9 @@ if (http.Server && http.WebSocketServer) {
             pin = msg.params[0]
             value = msg.params[1]
             board.digitalWrite(pin, value);
+            break;
+          case "play_tone":
+            board.playTone(msg.params[0], msg.params[1], msg.params[2], msg.params[3]); //params: pin,tone command, frequency, duration
             break;
            
         }
