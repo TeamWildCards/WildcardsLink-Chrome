@@ -201,7 +201,6 @@ if (http.Server && http.WebSocketServer) {
         
         switch (msg.method){
           case "set_pin_mode":
-            console.log('Better');
             console.log(msg)
             pin = msg.params[0]
             value = msg.params[1]
@@ -209,15 +208,24 @@ if (http.Server && http.WebSocketServer) {
             board.pinMode(pin, value);
             break;
           case "digital_pin_write":
-            console.log('call Saul');
             console.log(msg)
             pin = msg.params[0]
             value = msg.params[1]
             board.digitalWrite(pin, value);
             break;
           case "play_tone":
+            console.log(msg)
             board.playTone(msg.params[0], msg.params[1], msg.params[2], msg.params[3]); //params: pin,tone command, frequency, duration
             break;
+          case "servo_config":
+            console.log(msg)
+            board.servoConfig(msg.params[0], msg.params[1], msg.params[2]); //params: pin,min_pulse, max_pulse
+            break;
+          case "analog_write":
+            console.log(msg)
+            board.analogWrite(msg.params[0], msg.params[1]); //params: pin,value
+            break;
+            
            
         }
         

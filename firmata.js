@@ -43,6 +43,7 @@ var PIN_MODE = 0xF4,
     SYSTEM_RESET = 0xFF,
     PULSE_OUT = 0x73,
     PULSE_IN = 0x74,
+    SERVO_CONFIG = 0x70,
     TONE_DATA = 0x5F;
 
     /**
@@ -415,16 +416,7 @@ Board.prototype.analogRead = function(pin, callback) {
     this.addListener('analog-read-' + pin, callback);
 };
 
-/**
- * Asks the arduino to write an analog message.
- * @param {number} pin The pin to write analog data to.
- * @param {nubmer} value The data to write to the pin between 0 and 255.
- */
 
-Board.prototype.analogWrite = function(pin, value) {
-    this.pins[pin].value = value;
-    this.sp.write([ANALOG_MESSAGE | pin, value & 0x7F, (value >> 7) & 0x7F]);
-};
 
 /**
  * Asks the arduino to move a servo
@@ -469,7 +461,10 @@ Board.prototype.digitalWrite = function(pin, value) {
 };
 
 /**
- * Asks the arduino to play a tone for a set frequency and duration
+ * This method will call the Tone library for the selected pin.
+ * It requires FirmataPlus to be loaded onto the arduino
+ * If the tone command is set to TONE_TONE, then the specified tone will be played.
+ * Else, if the tone command is TONE_NO_TONE, then any currently playing tone will be disabled.
  * @param {number} pin The pin you want to write a value to
  * @param {string} tone_command firmata plus based command
  * @param {number} frequency the freqency that you want to tone to play at in Hz
@@ -478,7 +473,40 @@ Board.prototype.digitalWrite = function(pin, value) {
 
 Board.prototype.playTone = function(pin, tone_command, frequency, duration) {
     console.log("Called play tone", pin, tone_command, frequency, duration);
-    this.sp.write([START_SYSEX, TONE_DATA, 0, pin, frequency & 0x7F, (frequency>> 7) & 0x7F, duration & 0x7F, (duration >> 7) & 0x7F, END_SYSEX]);
+    //Tone command is always set to 0 below, in the future might want to implement as switch from tone_command var
+    this.sp.write([START_SYSEX,TONE_DATA,0,pin,frequency & 0x7F, (frequency>> 7) & 0x7F,duration & 0x7F,(duration >> 7) & 0x7F, END_SYSEX]);
+};
+
+/**
+ * Configure a pin as a servo pin. Set pulse min, max in ms.
+ * Use this method (not set_pin_mode) to configure a pin for servo
+ * operation.
+ * @param {number} pin Servo Pin.
+ * @param {number} min_pulse Min pulse width in ms.
+ * @param {number} max_pulse Max pulse width in ms.
+ * @param
+ */
+
+Board.prototype.servoConfig = function(pin, min_pulse, max_pulse) {
+    console.log("Called servo config", pin, min_pulse, max_pulse);
+    this.sp.write([START_SYSEX,SERVO_CONFIG,pin,min_pulse & 0x7F, (min_pulse>> 7) & 0x7F,max_pulse & 0x7F,(max_pulse>> 7) & 0x7F, END_SYSEX]);
+};
+
+/**
+ Set the selected pin to the specified value. This will use ANALOG_MESSAGE if possible,
+ but switch to extended analog sysex message if pin is out of range
+ @param {number} pin PWM pin number
+ @param {number} value Pin value (0 - 0x4000) or (0 - 16384).
+ In PWM mode, this sets a duty cycle between 0 to 255. In Servo mode, when
+ the values are 0-180, the units are degrees. Values up to 544 are maxed out at 180 degrees.
+ Beyond 544, the units are microseconds of the pulse duration (typical guaranteed servo range
+ is 1ms to 2ms, but often goes a bit beyond thaton either end)
+ */
+
+Board.prototype.analogWrite = function(pin, value) {
+    console.log("Called analog write", pin, value)
+    this.pins[pin].value = value;
+    this.sp.write([ANALOG_MESSAGE | pin, value & 0x7F, (value >> 7) & 0x7F]);
 };
 
 /**
