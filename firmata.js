@@ -440,6 +440,34 @@ Board.prototype.pinMode = function(pin, mode) {
 };
 
 /**
+ * Enables digital reporting. By turning reporting on for all 8 bits
+ * in the "port" - this is part of Firmata's protocol specification.
+ * @param {number} pin The pin for which reporting should be turned on. Firmata
+ *                  will turn on reporting for the entire report, whether you
+ *                  like it or not. So it goes...
+ */
+
+Board.prototype.enableDigitalReporting = function(pin) {
+    console.log("Called enable digital reporting", pin)
+    port = Math.floor(pin/8);
+    this.sp.write([REPORT_DIGITAL | port, 0x01]);
+};
+
+/**
+ * Disable digital reporting. By turning reporting off for all 8 bits
+ * in the "port" - this is part of Firmata's protocol specification.
+ * @param {number} pin The pin for which reporting should be turned off. Firmata
+ *                  will turn off reporting for the entire report, whether you
+ *                  like it or not. So it goes...
+ */
+
+Board.prototype.disableDigitalReporting = function(pin) {
+    console.log("Called disable digital reporting", pin)
+    port = Math.floor(pin/8);
+    this.sp.write([REPORT_DIGITAL | port, 0x00]);
+};
+
+/**
  * Asks the arduino to write a value to a digital pin
  * @param {number} pin The pin you want to write a value to.
  * @param {value} value The value you want to write. Must be board.HIGH or board.LOW

@@ -6,13 +6,6 @@ function log(text) {
   $('log').value += text + '\n';
 }
 
-
-
-
-
-
-
-
 var modeNames = [
   "INPUT",
   "OUTPUT",
@@ -206,6 +199,9 @@ if (http.Server && http.WebSocketServer) {
             value = msg.params[1]
             console.log(value);
             board.pinMode(pin, value);
+            if (value = "0"){
+              board.enableDigitalReporting(pin);
+            }
             break;
           case "digital_pin_write":
             console.log(msg)
