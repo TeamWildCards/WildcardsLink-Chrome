@@ -5,6 +5,7 @@
 
 
 function sleep(milliseconds) {
+  console.log('sleeping for ' + milliseconds)
   var start = new Date().getTime();
   for (var i = 0; i < 1e7; i++) {
     if ((new Date().getTime() - start) > milliseconds){
@@ -96,18 +97,29 @@ MIDI_RESPONSE[ANALOG_MESSAGE] = function(board) {
  */
 
 MIDI_RESPONSE[DIGITAL_MESSAGE] = function(board) {
+    console.log("doing midi response");
     var port = (board.currentBuffer[0] & 0x0F);
     var portValue = board.currentBuffer[1] | (board.currentBuffer[2] << 7);
+    console.log(port, portValue);
     for (var i = 0; i < 8; i++) {
         var pinNumber = 8 * port + i;
         var pin = board.pins[pinNumber];
+        console.log(pinNumber, pin);
+        
+        //why are some values strings instead of numeric???? research...
+        
         if (pin && (pin.mode === board.MODES.INPUT)) {
+			//unsure why it is anded with 0x07, seems useless as i is limited to 8 anyway...remove?
             pin.value = (portValue >> (i & 0x07)) & 0x01;
-            board.emit('digital-read-' + pinNumber, pin.value);
-            board.emit('digital-read', {
-                pin: pinNumber,
-                value: pin.value
-            });
+            //board.emit('digital-read-' + pinNumber, pin.value);
+            //board.emit('digital-read', {
+            //    pin: pinNumber,
+            //    value: pin.value
+            console.log("gonna transmit digital message")
+            console.log(pinNumber, pin.Value)
+      			transmit_digital_message(pinNumber, pin.value);
+      			console.log("transmitted digital message")
+            //});
         }
     }
 };
@@ -158,6 +170,9 @@ SYSEX_RESPONSE[CAPABILITY_RESPONSE] = function(board) {
 
     for (var i = 2, n = 0; i < board.currentBuffer.length - 1; i++) {
         if (board.currentBuffer[i] === 127) {
+            //console.log("debugging now")
+            //debugger;
+            //console.log("done debugging")
             var modesArray = [];
             Object.keys(board.MODES).forEach(pushModes.bind(null, modesArray));
             board.pins.push({
@@ -297,7 +312,18 @@ var Board = function(port, callback) {
       OUTPUT: 0x01,
       ANALOG: 0x02,
       PWM: 0x03,
-      SERVO: 0x04
+      SERVO: 0x04,
+      I2C: 0x06,
+      ONEWIRE: 0x07,
+      STEPPER: 0x08,
+      ENCODER: 0x09,
+      SERIAL: 0x0A,
+      PULLUP: 0x0B,
+      SONAR: 0x0C,
+      TONE: 0x0D,
+      PIXY: 0x0E,
+      NOMODESET: 0x7E,
+      IGNORE: 0x7F
   };
   this.I2C_MODES = {
       WRITE: 0x00,
@@ -334,15 +360,20 @@ Board.prototype.initialize = async function() {
 */
 
 Board.prototype.message_dispatch = function(data) {
-  console.log(data)
+  console.log(data);
+  console.log(board.currentBuffer);
+  console.log(board.currentBuffer.length);
 	var byt, cmd;
 
 	if (!board.versionReceived && data[0] !== REPORT_VERSION) {
+	  console.log("not versioned yet");
 		return;
 	} else {
+	  console.log("ok versioned versioned yet");
 		board.versionReceived = true;
 	}
-
+  console.log("trying to dispatch");
+  
 	for (var i = 0; i < data.length; i++) {
 		byt = data[i];
 		// we dont want to push 0 as the first byte on our buffer
@@ -350,7 +381,7 @@ Board.prototype.message_dispatch = function(data) {
 			continue;
 		} else {
 			board.currentBuffer.push(byt);
-
+      console.log(board.currentBuffer);
 			// [START_SYSEX, ... END_SYSEX]
 			if (board.currentBuffer[0] === START_SYSEX &&
 			  SYSEX_RESPONSE[board.currentBuffer[1]] &&
@@ -393,7 +424,8 @@ Board.prototype.message_dispatch = function(data) {
 
 Board.prototype.reportVersion = function(callback) {
     //this.once('reportversion', callback);
-    this.sp.write(REPORT_VERSION);
+    console.log("sending report-version request")
+    this.sp.write([REPORT_VERSION]);
 };
 
 /**
@@ -464,7 +496,11 @@ Board.prototype.enableDigitalReporting = function(pin) {
 Board.prototype.disableDigitalReporting = function(pin) {
     console.log("Called disable digital reporting", pin)
     port = Math.floor(pin/8);
-    this.sp.write([REPORT_DIGITAL | port, 0x00]);
+	//yeah, let's not do this yet. We will make the implementation more robust later but
+	//it doesn't make sense to disable digital reporting for a whole port at once when
+	//you only wanted to turn it off for one pin
+	
+    //this.sp.write([REPORT_DIGITAL | port, 0x00]);
 };
 
 /**
@@ -474,7 +510,7 @@ Board.prototype.disableDigitalReporting = function(pin) {
  */
 
 Board.prototype.digitalWrite = function(pin, value) {
-    console.log("Called digital write", pin, value)
+    console.log("Called digital writez", pin, value)
     var port = Math.floor(pin / 8);
     var portValue = 0;
     this.pins[pin].value = value;
@@ -485,7 +521,9 @@ Board.prototype.digitalWrite = function(pin, value) {
         }
       }
     }
+    console.log("going to write ", port, portValue);
     this.sp.write([DIGITAL_MESSAGE | port, portValue & 0x7F, (portValue >> 7) & 0x7F]);
+    console.log("done writing ", port, portValue);
 };
 
 /**

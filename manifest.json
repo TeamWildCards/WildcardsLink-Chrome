@@ -20,5 +20,6 @@
     "background": {
       "scripts": ["background.js"]
     }
-  }
+  },
+  "icons": { "16": "wc_icon_circular.png", "128": "wc_icon_circular.png" }
 }

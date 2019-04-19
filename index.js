@@ -2,6 +2,10 @@ function $(id) {
   return document.getElementById(id);
 }
 
+//function asyncsleep(ms) {
+//  return new Promise(resolve => setTimeout(resolve, ms));
+//}
+
 function log(text) {
   $('log').value += text + '\n';
 }
@@ -14,36 +18,33 @@ var modeNames = [
   "SERVO",
 ];
 
+var ws = null;
+
 var ports;
 
-var selectList;
+var serialList = {};
+
 var selectBtn;
 
 //window.onload = function() {
 
 chrome.serial.getDevices(function (queriedPorts) {
-  console.log(queriedPorts);
-  ports = queriedPorts;
-
   selectList = document.createElement("select");
-
-  //Create and append the options
-  for (var i = 0; i < ports.length; i++) {
-      var option = document.createElement("option");
-      option.value = i;
-      option.text = ports[i].path;
-      selectList.appendChild(option);
-      console.log(option);
-      console.log(selectList);
+  selectList.id = "WildCardsLinkSerialPortList";
+  
+  for (var i = 0; i < queriedPorts.length; i++) {
+    var option = document.createElement("option");
+    option.value = i;
+    option.text = queriedPorts[i].path;
+    selectList.appendChild(option);
   }
-
   document.body.appendChild(selectList);
-
+  
   selectBtn = document.createElement("button");
   selectBtn.innerHTML= "connect";
   selectBtn.addEventListener('click', function() {
     console.log('clicked',selectList.selectedIndex);
-    connect(selectList.selectedIndex);
+    connect(selectList.options[selectList.selectedIndex].text);
     initialize();
   }, false);
   document.body.appendChild(selectBtn);
@@ -56,8 +57,8 @@ chrome.serial.getDevices(function (queriedPorts) {
 
 
 function connect(port){
-  console.log("starting to connect")
-  var board = window.board = new Board(ports[port].path, function (err) {
+  console.log("starting to connect to " + port);
+  var board = window.board = new Board(port, function (err) {
     if (err) throw err;
     console.log("board", board);
     var form = ["form",
@@ -79,7 +80,9 @@ function connect(port){
 
 
 async function initialize() {
-  await asyncsleep(5000);
+  await asyncsleep(3000);
+  board.reportVersion();
+  await asyncsleep(100);
   console.log("qc");
   board.queryCapabilities();
   console.log("qcd")
@@ -175,7 +178,7 @@ if (http.Server && http.WebSocketServer) {
 
   wsServer.addEventListener('request', function(req) {
     log('Client connected');
-    console.log('Hiya 1');
+    console.log('wsServer received event: request');
     var socket = req.accept();
     connectedSockets.push(socket);
 
@@ -185,6 +188,7 @@ if (http.Server && http.WebSocketServer) {
       //for (var i = 0; i < connectedSockets.length; i++)
         //connectedSockets[i].send(e.data);
         //Parse the message and repackage to serial stream
+        console.log('socket received event: message')
         var msg = JSON.parse(e.data);
         console.log("length: ",msg.params.length);
         
@@ -195,8 +199,8 @@ if (http.Server && http.WebSocketServer) {
         switch (msg.method){
           case "set_pin_mode":
             console.log(msg)
-            pin = msg.params[0]
-            value = msg.params[1]
+            pin = parseInt(msg.params[0])
+            value = parseInt(msg.params[1])
             console.log(value);
             board.pinMode(pin, value);
             if (value = "0"){
@@ -205,21 +209,21 @@ if (http.Server && http.WebSocketServer) {
             break;
           case "digital_pin_write":
             console.log(msg)
-            pin = msg.params[0]
-            value = msg.params[1]
+            pin = parseInt(msg.params[0])
+            value = parseInt(msg.params[1])
             board.digitalWrite(pin, value);
             break;
           case "play_tone":
             console.log(msg)
-            board.playTone(msg.params[0], msg.params[1], msg.params[2], msg.params[3]); //params: pin,tone command, frequency, duration
+            board.playTone(parseInt(msg.params[0]), msg.params[1], parseInt(msg.params[2]), parseInt(msg.params[3])); //params: pin,tone command, frequency, duration
             break;
           case "servo_config":
             console.log(msg)
-            board.servoConfig(msg.params[0], msg.params[1], msg.params[2]); //params: pin,min_pulse, max_pulse
+            board.servoConfig(parseInt(msg.params[0]), parseInt(msg.params[1]), parseInt(msg.params[2])); //params: pin,min_pulse, max_pulse
             break;
           case "analog_write":
             console.log(msg)
-            board.analogWrite(msg.params[0], msg.params[1]); //params: pin,value
+            board.analogWrite(parseInt(msg.params[0]), parseInt(msg.params[1])); //params: pin,value
             break;
             
            
@@ -242,35 +246,47 @@ if (http.Server && http.WebSocketServer) {
 }
 
 function transmit_digital_message(pin, value) {
-  console.log("Slippin' Jimmy, faking sending pin " + pin + " and value " + value + " over the websocket...")
-  //implement ws sending the data here
+  console.log("Slippin' Jimmy, faking sending analog pin " + pin + " and value " + value + " over the websocket...")
+
+  var msg = JSON.stringify({"method": "digital_message_reply", "params": [pin, value.toString()]});
+  console.log("message generated");
+  for (var i = 0; i < connectedSockets.length; i++)
+    connectedSockets[i].send(msg);
+
+  //window.ws.send(msg);
+  console.log("digital message sent...  ", msg);
 }
 
+function transmit_analog_message(pin, value) {
+  console.log("Slippin' Jimmy, faking sending pin " + pin + " and value " + value + " over the websocket...");
+  var msg = JSON.stringify({"method": "analog_message_reply", "params": [pin, value.toString()]});
+  window.ws.send(msg);
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
+  debugger;
   console.log('test');
-  log('This is a test of an HTTP and WebSocket server. This application is ' +
-      'serving its own source code on port ' + port + '. Each client ' +
-      'connects to the server on a WebSocket and all messages received on ' +
-      'one WebSocket are echoed to all connected clients - i.e. a chat ' +
-      'server. Enjoy!');
+  log("ok");
+  log('Setting up WebSocket on port ' + port);
 // FIXME: Wait for 1s so that HTTP Server socket is listening...
 setTimeout(function() {
   var address = isServer ? 'ws://localhost:' + port + '/' :
       window.location.href.replace('http', 'ws');
-  var ws = new WebSocket(address);
-  ws.addEventListener('open', function() {
+  window.ws = new WebSocket(address);
+  window.ws.addEventListener('open', function() {
     log('Connected');
   });
-  ws.addEventListener('close', function() {
+  window.ws.addEventListener('close', function() {
     log('Connection lost');
     $('input').disabled = true;
   });
-  ws.addEventListener('message', function(e) {
+  window.ws.addEventListener('message', function(e) {
     log(e.data);
   });
   $('input').addEventListener('keydown', function(e) {
-    if (ws && ws.readyState == 1 && e.keyCode == 13) {
-      ws.send(this.value);
+    if (window.ws && window.ws.readyState == 1 && e.keyCode == 13) {
+      window.ws.send(this.value);
       this.value = '';
     }
   });
@@ -278,6 +294,87 @@ setTimeout(function() {
 });
 
 
+
+
+
+var promiseKeepUpdatingSerialDeviceList = new Promise(async function(resolve, reject) {
+  selectList = document.getElementById("WildCardsLinkSerialPortList");
+  await asyncsleep(1000);
+
+  //loop time...
+  while(1){
+    chrome.serial.getDevices(function (queriedPorts) {
+      //debugger;
+      while(selectList.options.length)
+        selectList.options.remove(0)
+      console.log(selectList);
+      for (var i = 0; i < queriedPorts.length; i++) {
+        var option = document.createElement("option");
+        option.value = i;
+        option.text = queriedPorts[i].path;
+        selectList.appendChild(option);
+      }
+    //start by setting all ports to not display
+    /*
+    for(var key in serialList) {
+      serialList[key].ready = false;
+    }
+    
+    chrome.serial.getDevices(function (queriedPorts) {
+      console.log(queriedPorts);
+      console.log(selectList);
+      ports = queriedPorts;
+      
+      for (var i = 0; i < ports.length; i++) {
+        //if the port is found, mark that it is ready
+        if (serialList[ports[i].path]) {
+          serialList[ports[i].path].ready = true;
+        }
+        //or create it if needed
+        else {
+          serialList[ports[i].path] = new serialPort(true, i, ports[i].path)
+          serialList[ports[i].path].ready = true;
+          serialList[ports[i].path].index = Object.keys(serialList).length-1;
+          serialList[ports[i].path].path = ports[i].path;
+        }
+      }
+      
+      //need to try disable, etc. or just give up on index???
+      for(var key in serialList) {
+        if (serialList[key].index >= selectList.options.length) {
+          var option = document.createElement("option");
+          option.value = serialList[key].index;
+          option.text = serialList[key].path;
+          selectList.appendChild(option);
+        }
+        else if (serialList[key].ready) {
+          var option = document.createElement("option");
+          option.value = serialList[key].index;
+          option.text = serialList[key].path;
+          selectList.options[serialList[key].index] = option;
+        }
+        else {
+          selectList.options[serialList[key].index] = null;
+        }
+  
+  
+          //console.log(option);
+          //console.log(selectList);
+      }
+      */
+    });
+    await asyncsleep(2000);
+    //console.log("done waiting again")
+  }
+});
+
+var promiseKeepSendingSerialData = new Promise(async function(resolve, reject) {
+  setTimeout(resolve, 100, 'foo');
+});
+
+Promise.all([promiseKeepUpdatingSerialDeviceList, promiseKeepSendingSerialData]).then(function(values) {
+  console.log(values);
+});
 
 
 

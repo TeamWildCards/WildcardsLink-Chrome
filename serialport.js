@@ -39,7 +39,7 @@ SerialPort.prototype.write = function (data) {
   function onWrite() {
     //console.log("onWrite", arguments);
   }
-
+  console.log("writing", data)
   data = new Uint8Array(data);
   console.log("OUT", data);
   if(this.id){
