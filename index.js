@@ -64,6 +64,11 @@ chrome.serial.getDevices(function (queriedPorts) {
     }
     
   }, false);
+  
+  launchBtn.addEventListener('click', function() {
+    console.log('Scratch Launched');
+    window.open("https://scratch.wildcards.io");
+  }, false);
 });
 
 //}
