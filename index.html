@@ -2,15 +2,53 @@
 <html>
   <head>
 	<title>WildcardsLink-Chrome App</title>
+	
+	  <!-- CSS. Boostrap, Custom, then Fonts -->
+    <link rel="stylesheet" href="bootstrap.min.css" crossorigin="anonymous">
+    
     <link rel="stylesheet" href="index.css">
+    
     <script src="sha1.js"></script>
     <script src="http.js"></script>
-    <script src="serialport.js"></script>		
-    <script src="firmata.js"></script>	
+    <script src="serialport.js"></script>
+    <script src="firmata.js"></script>
     <script src="index.js"></script>
+    
+    <!-- We can and should add google tag tracker in here to fire when schools are opening the chrome app -->
+    
+    <!-- Page modifying Javascript -->
+    
+    
+    
   </head>
   <body>
-    <textarea id="log"></textarea>
-    <input type="text" id="input" placeholder="Type a message to other connected clients here">
+    <div class="container-fluid" id="logo">
+      <img  src='wc_full_logo.png' alt='wc_full_logo_web' />
+    </div>
+    <div class= "container-fluid" id="main">
+      <div class="row justify-content-center">
+        <div class="col-3 text-center main-select" id = "main-select-1">
+          <img id = "boardImage" class ="inactiveImg" src='wildcards_board.png'>
+          <div class="row justify-content-center mt-1">
+            <select id="WildCardsLinkSerialPortList">
+              <option value="None">No Board Connected</option>
+            </select>
+          </div>
+          <div class="row justify-content-center mt-1">
+            <button type="button" id ="connectButton" class="btn btn-secondary btn-lg" disabled>Plug in Your Board</button>
+          </div>
+          
+        </div>
+        <div class="col-2 text-center d-flex flex-wrap align-items-center main-select" id = "main-select-2">
+          <img id = "arrowImage" src='arrow.png'>
+        </div>
+        <div class="col-4 text-center main-select mt-5" id = "main-select-3">
+          <img id = "scratchImage" src='scratch.jpg'>
+          <div class="row justify-content-center mt-4">
+            <a type="button" id ="launchButton" href ="http://scratch.wildcards.  io" class="btn btn-secondary btn-lg" role="button" target="_blank" disabled>Waiting...</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

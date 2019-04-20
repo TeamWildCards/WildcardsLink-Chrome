@@ -3,7 +3,8 @@
   "description": "Connect Scratch 3.0 to a Wildcards Board.",
   "version": "0.0.1",
   "manifest_version": 2,
-
+  
+  
   "sockets": {
     "tcp": {
       "connect": "*"
@@ -22,4 +23,5 @@
     }
   },
   "icons": { "16": "wc_icon_circular.png", "128": "wc_icon_circular.png" }
+  
 }

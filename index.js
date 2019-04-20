@@ -29,8 +29,8 @@ var selectBtn;
 //window.onload = function() {
 
 chrome.serial.getDevices(function (queriedPorts) {
-  selectList = document.createElement("select");
-  selectList.id = "WildCardsLinkSerialPortList";
+  selectList = document.getElementById("WildCardsLinkSerialPortList");  //RBD: Moved WildCardsLinkSerialPortList to index.html
+  //selectList.id = "WildCardsLinkSerialPortList";
   
   for (var i = 0; i < queriedPorts.length; i++) {
     var option = document.createElement("option");
@@ -38,18 +38,32 @@ chrome.serial.getDevices(function (queriedPorts) {
     option.text = queriedPorts[i].path;
     selectList.appendChild(option);
   }
-  document.body.appendChild(selectList);
   
-  selectBtn = document.createElement("button");
-  selectBtn.innerHTML= "connect";
+  selectBtn = document.getElementById("connectButton"); //RBD: Button is created on Index.html now
+  launchBtn = document.getElementById("launchButton"); //RBD: Launch button for scratch
+  boardImage = document.getElementById("boardImage"); //RBD to be used to modify board image later
+  arrowImage = document.getElementById("arrowImage"); //RBD to be used to modify arrow image later
+  scratchImage = document.getElementById("scratchImage"); //RBD to be used to modify scratch image later
+  boardImage.className = "inactiveImg"; //RBD Grey out the image using CSS class
+  arrowImage.className = "inactiveImg";
+  scratchImage.className = "inactiveImg";
+  
+  
+  //RBD: Button cannot be clicked until a USB device is connected. Im handing the enabling of the button click in the promise
+  
   selectBtn.addEventListener('click', function() {
     console.log('clicked',selectList.selectedIndex);
-    connect(selectList.options[selectList.selectedIndex].text);
-    initialize();
+    //RBD: Using the button text to determine what action to take on the button
+    //     If "connect", then er uh....connect. Will need to add disconnect?
+    if (selectBtn.innerHTML == "Connect"){
+      connect(selectList.options[selectList.selectedIndex].text);
+      initialize();
+      selectBtn = document.getElementById("connectButton").innerHTML = "Connecting...";
+    }else{
+      console.log('Whoa Black Betty, Bamalam');
+    }
+    
   }, false);
-  document.body.appendChild(selectBtn);
-
-
 });
 
 //}
@@ -74,8 +88,9 @@ function connect(port){
       })
     ];
     document.body.appendChild(domBuilder(form));
-
   });
+  //RBD: Firmata.js changes button text to connected, in case you were wondering :)
+
 }
 
 
@@ -177,7 +192,7 @@ if (http.Server && http.WebSocketServer) {
   var connectedSockets = [];
 
   wsServer.addEventListener('request', function(req) {
-    log('Client connected');
+    console.log('Client connected');  //RBD: Used console.log
     console.log('wsServer received event: request');
     var socket = req.accept();
     connectedSockets.push(socket);
@@ -233,7 +248,7 @@ if (http.Server && http.WebSocketServer) {
 
     // When a socket is closed, remove it from the list of connected sockets.
     socket.addEventListener('close', function() {
-      log('Client disconnected');
+      console.log('Client disconnected'); //RBD: Used console.log
       for (var i = 0; i < connectedSockets.length; i++) {
         if (connectedSockets[i] == socket) {
           connectedSockets.splice(i, 1);
@@ -266,19 +281,18 @@ function transmit_analog_message(pin, value) {
 
 document.addEventListener('DOMContentLoaded', function() {
   debugger;
-  console.log('test');
-  log("ok");
-  log('Setting up WebSocket on port ' + port);
+  console.log("ok"); //RBD: Used console.log
+  console.log('Setting up WebSocket on port ' + port); //RBD: Used console.log
 // FIXME: Wait for 1s so that HTTP Server socket is listening...
 setTimeout(function() {
   var address = isServer ? 'ws://localhost:' + port + '/' :
       window.location.href.replace('http', 'ws');
   window.ws = new WebSocket(address);
   window.ws.addEventListener('open', function() {
-    log('Connected');
+    console.log('Connected'); //RBD: Used console.log
   });
   window.ws.addEventListener('close', function() {
-    log('Connection lost');
+    console.log('Connection lost'); //RBD: Used console.log
     $('input').disabled = true;
   });
   window.ws.addEventListener('message', function(e) {
@@ -313,6 +327,25 @@ var promiseKeepUpdatingSerialDeviceList = new Promise(async function(resolve, re
         option.value = i;
         option.text = queriedPorts[i].path;
         selectList.appendChild(option);
+      }
+      
+      //RBD: Activate and modify the button if selectList grows/shrinks i.e. a device is connected or device is removed
+      //     Buttons are disabled/greyed out if the length of the list is 0 hence no devices connected.
+      if (selectList.options.length == 0){
+        selectBtn.setAttribute("disabled", true);
+        selectBtn.className = "btn btn-secondary btn-lg";
+        selectBtn.innerHTML = "Plug in Your Board"
+        boardImage.className = "inactiveImg";
+        arrowImage.className = "inactiveImg";
+        scratchImage.className = "inactiveImg";
+        
+      } else if (selectList.options.length > 0) {
+        selectBtn.removeAttribute("disabled");
+        selectBtn.className = "btn btn-primary btn-lg";
+        selectBtn.innerHTML = "Connect"
+        boardImage.className = "activeImg";
+        
+        
       }
     //start by setting all ports to not display
     /*
