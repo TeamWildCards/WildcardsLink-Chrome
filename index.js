@@ -47,9 +47,8 @@ chrome.serial.getDevices(function (queriedPorts) {
   boardImage.className = "inactiveImg"; //RBD Grey out the image using CSS class
   arrowImage.className = "inactiveImg";
   scratchImage.className = "inactiveImg";
-  
-  
-  //RBD: Button cannot be clicked until a USB device is connected. Im handing the enabling of the button click in the promise
+  selectBtn.disabled = true; //RBD: Button disables until a USB device is connected. Enabling of the button click is in the promise
+  launchBtn.disabled = true;
   
   selectBtn.addEventListener('click', function() {
     console.log('clicked',selectList.selectedIndex);
@@ -336,21 +335,27 @@ var promiseKeepUpdatingSerialDeviceList = new Promise(async function(resolve, re
       
       //RBD: Activate and modify the button if selectList grows/shrinks i.e. a device is connected or device is removed
       //     Buttons are disabled/greyed out if the length of the list is 0 hence no devices connected.
-      if (selectList.options.length == 0){
-        selectBtn.setAttribute("disabled", true);
-        selectBtn.className = "btn btn-secondary btn-lg";
-        selectBtn.innerHTML = "Plug in Your Board"
-        boardImage.className = "inactiveImg";
-        arrowImage.className = "inactiveImg";
-        scratchImage.className = "inactiveImg";
+      //FIXME: This does not update after the board has been connected.....hrrmmmmmmmm
+      
+      selectBtn = document.getElementById("connectButton");
+
+      if (selectList.options.length < 1){
+        if(selectBtn.innerHTML == "Connected" || selectBtn.innerHTML == "Connect") {
+          selectBtn.disabled = true;
+          selectBtn.className = "btn btn-secondary btn-lg";
+          selectBtn.innerHTML = "Plug in Your Board";
+          boardImage.className = "inactiveImg";
+          arrowImage.className = "inactiveImg";
+          scratchImage.className = "inactiveImg";
+        }
         
       } else if (selectList.options.length > 0) {
-        selectBtn.removeAttribute("disabled");
-        selectBtn.className = "btn btn-primary btn-lg";
-        selectBtn.innerHTML = "Connect"
-        boardImage.className = "activeImg";
-        
-        
+        if(selectBtn.innerHTML == "Plug in Your Board") {
+          selectBtn.disabled = false;
+          selectBtn.className = "btn btn-primary btn-lg";
+          selectBtn.innerHTML = "Connect"
+          boardImage.className = "activeImg";
+        }
       }
     //start by setting all ports to not display
     /*

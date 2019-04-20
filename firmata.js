@@ -192,10 +192,9 @@ SYSEX_RESPONSE[CAPABILITY_RESPONSE] = function(board) {
     console.log("numpins " + board.pins.length)
     //RBD: Update the button, arrow, scratch images to reflect connetion
     selectBtn = document.getElementById("connectButton").innerHTML = "Connected";
-    selectBtn.className = "btn btn-success btn-lg";
     arrowImage.className = "activeImg";
     scratchImage.className = "activeImg";
-    launchBtn.removeAttribute("disabled");
+    launchBtn.disabled = false;
     launchBtn.className = "btn btn-primary btn-lg";
     launchBtn.innerHTML = "Launch Scratch"
     //board.emit('capability-query');
