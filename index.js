@@ -26,7 +26,10 @@ var serialList = {};
 
 var selectBtn;
 
-//window.onload = function() {
+window.onload = function() {
+  selectBtn = document.getElementById("connectButton"); //RBD: Button is created on Index.html now
+  boardImage = document.getElementById("boardImage"); //RBD to be used to modify board image later
+}
 
 chrome.serial.getDevices(function (queriedPorts) {
   selectList = document.getElementById("WildCardsLinkSerialPortList");  //RBD: Moved WildCardsLinkSerialPortList to index.html
@@ -39,8 +42,7 @@ chrome.serial.getDevices(function (queriedPorts) {
     selectList.appendChild(option);
   }
   
-  selectBtn = document.getElementById("connectButton"); //RBD: Button is created on Index.html now
-  boardImage = document.getElementById("boardImage"); //RBD to be used to modify board image later
+  
   boardImage.className = "inactiveImg"; //RBD Grey out the image using CSS class
   selectBtn.disabled = true; //RBD: Button disables until a USB device is connected. Enabling of the button click is in the promise
   
@@ -52,7 +54,7 @@ chrome.serial.getDevices(function (queriedPorts) {
       connect(selectList.options[selectList.selectedIndex].text);
       initialize();
       selectBtn = document.getElementById("connectButton").innerHTML = "Connecting...";
-    }else if(selectBtn.innerHTML == "Launch Scratch"){
+    }else if(selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Re-Launch Scratch"){
       console.log('Scratch Launched');
       window.open("https://scratch.wildcards.io");
     }
@@ -83,7 +85,7 @@ function connect(port){
     ];
     document.body.appendChild(domBuilder(form));
   });
-  //RBD: Firmata.js changes button text to connected, in case you were wondering :)
+  //RBD: Firmata.js changes button text to 'Launch Scratch', in case you were wondering :)
 
 }
 
@@ -200,6 +202,11 @@ if (http.Server && http.WebSocketServer) {
         console.log('socket received event: message')
         var msg = JSON.parse(e.data);
         console.log("length: ",msg.params.length);
+        //RBD: Using this listener to indicate that the extension has been loaded.
+        if(selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Re-Launch Scratch"){
+          selectBtn.innerHTML = "Extension Loaded";
+          selectBtn.className = "btn btn-success btn-lg";
+        }
         
         for (i = 0; i < msg.params.length; i++) {
           console.log(msg.params[i]);
@@ -243,6 +250,11 @@ if (http.Server && http.WebSocketServer) {
     // When a socket is closed, remove it from the list of connected sockets.
     socket.addEventListener('close', function() {
       console.log('Client disconnected'); //RBD: Used console.log
+      //RBD: Indicate that scratch has been closed
+      if(selectBtn.innerHTML == "Extension Loaded") {
+          selectBtn.className = "btn btn-danger btn-lg";
+          selectBtn.innerHTML = "Re-Launch Scratch";
+        }
       for (var i = 0; i < connectedSockets.length; i++) {
         if (connectedSockets[i] == socket) {
           connectedSockets.splice(i, 1);
@@ -284,6 +296,7 @@ setTimeout(function() {
   window.ws = new WebSocket(address);
   window.ws.addEventListener('open', function() {
     console.log('Connected'); //RBD: Used console.log
+      
   });
   window.ws.addEventListener('close', function() {
     console.log('Connection lost'); //RBD: Used console.log
@@ -330,21 +343,19 @@ var promiseKeepUpdatingSerialDeviceList = new Promise(async function(resolve, re
       selectBtn = document.getElementById("connectButton");
 
       if (selectList.options.length < 1){
-        if(selectBtn.innerHTML == "Connect" || selectBtn.innerHTML == "Launch Scratch") {
+        if(selectBtn.innerHTML == "Connect" || selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Extension Loaded" || selectBtn.innerHTML == "Re-Launch Scratch")  {
           selectBtn.disabled = true;
-          selectBtn.className = "btn btn-secondary btn-lg";
-          selectBtn.innerHTML = "Plug in Your Board";
+          selectBtn.className = "btn btn-danger btn-lg";
+          selectBtn.innerHTML = "Re-Plug in Your Board";
           boardImage.className = "inactiveImg";
         }
         
       } else if (selectList.options.length > 0) {
-        if(selectBtn.innerHTML == "Plug in Your Board") {
+        if(selectBtn.innerHTML == "Plug in Your Board" || selectBtn.innerHTML == "Re-Plug in Your Board") {
           selectBtn.disabled = false;
           selectBtn.className = "btn btn-primary btn-lg";
           selectBtn.innerHTML = "Connect"
           boardImage.className = "activeImg";
-        }else if(selectBtn.innerHTML == "Launch Scratch") {
-          selectBtn.className = "btn btn-success btn-lg";
         }
       }
     //start by setting all ports to not display
