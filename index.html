@@ -22,30 +22,27 @@
     
   </head>
   <body>
-    <div class="container-fluid" id="logo">
-      <img  src='wc_full_logo.png' alt='wc_full_logo_web' />
+    <div class="container-fluid" id="top">
+      <div class="row justify-content-center">
+        <div class="col-8">
+          <img id ="logo" src='wc_full_logo.png' alt='wc_full_logo_web' />
+        </div>
+        <div class="col-3 justify-content-left pt-4">
+           <h1>Link</h1>
+        </div>
+      </div>
     </div>
     <div class= "container-fluid" id="main">
       <div class="row justify-content-center">
-        <div class="col-3 text-center main-select" id = "main-select-1">
+        <div class="col-12 text-center main-select" id = "main-select-1">
           <img id = "boardImage" class ="inactiveImg" src='wildcards_board.png'>
-          <div class="row justify-content-center mt-1">
+          <div class="row justify-content-center pb-2">
             <select id="WildCardsLinkSerialPortList">
               <option value="None">No Board Connected</option>
             </select>
           </div>
           <div class="row justify-content-center mt-1">
             <button type="button" id ="connectButton" class="btn btn-secondary btn-lg">Plug in Your Board</button>
-          </div>
-          
-        </div>
-        <div class="col-2 text-center d-flex flex-wrap align-items-center main-select" id = "main-select-2">
-          <img id = "arrowImage" src='arrow.png'>
-        </div>
-        <div class="col-4 text-center main-select mt-5" id = "main-select-3">
-          <img id = "scratchImage" src='scratch.jpg'>
-          <div class="row justify-content-center mt-4">
-            <button type="button" id ="launchButton" class="btn btn-secondary btn-lg" role="button" target="_blank" disabled>Waiting...</button>
           </div>
         </div>
       </div>

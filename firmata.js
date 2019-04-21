@@ -190,13 +190,9 @@ SYSEX_RESPONSE[CAPABILITY_RESPONSE] = function(board) {
         n ^= 1;
     }
     console.log("numpins " + board.pins.length)
-    //RBD: Update the button, arrow, scratch images to reflect connetion
-    selectBtn = document.getElementById("connectButton").innerHTML = "Connected";
-    arrowImage.className = "activeImg";
-    scratchImage.className = "activeImg";
-    launchBtn.disabled = false;
-    launchBtn.className = "btn btn-primary btn-lg";
-    launchBtn.innerHTML = "Launch Scratch"
+    //RBD: Update the button to reflect connetion
+    selectBtn = document.getElementById("connectButton").innerHTML = "Launch Scratch";
+    selectBtn.className = "btn btn-success btn-lg";
     //board.emit('capability-query');
 };
 

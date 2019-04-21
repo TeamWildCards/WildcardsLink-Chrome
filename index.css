@@ -1,28 +1,24 @@
 html,
 body {
-  height: 600px;
+  height: 100%;
   margin: 0;
   padding: 0;
   width: 100%;
 }
 
-body {
-  -webkit-box-orient: vertical;
-  display: -webkit-box;
-}
-#logo {
-  height:20%;
+#top {
+  height:18%;
 }
 
-#logo img{
-  height: 50%;
-  padding-left: 100px;
-  margin-top:10px;
+#logo {
+  width: 100%;
+  padding-left: 10px;
+  margin-top:22px;
 }
 
 #main {
   background:#5F259F;
-  height: 70%;
+  height: 100%;
 }
 
 
@@ -35,15 +31,6 @@ body {
   transform: scale(1.1);
 }
 
-#main-select-2 img {
-  width: 100px;
-}
-
-#main-select-3 img {
-  height:250px;
-}
-
-
 #log {
   -webkit-box-flex: 1;
 }
@@ -54,14 +41,30 @@ body {
   display: block;
 }
 
-#footer {
-  height: 20%;
+#launchbutton {
+  
 }
-
 .inactiveImg{
   opacity: 0.4;
 }
 
 .activeImg{
   opacity: 1.0;
+  visibility: visible;
 }
+
+.hidden {
+  visibility: hidden;
+}
+
+
+h1 {
+  color: #374048;
+  font-family: "Roboto";
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-size: 35px;
+  line-height: 40px;
+  margin-left: -15px;
+}
+
