@@ -18,6 +18,7 @@ function SerialPort(port, recvcallback, options) {
       chrome.serial.onReceive.addListener(function(obj){
         if(id == obj.connectionId){
           var data = new Uint8Array(obj.data);
+          //console.log(data);
     		  recvcallback(data);   //recvcallback function receives the data from the serial port
           //self.emit("data", data);
         }
@@ -39,12 +40,12 @@ SerialPort.prototype.write = function (data) {
   function onWrite() {
     //console.log("onWrite", arguments);
   }
-  console.log("writing", data)
+  //console.log("writing", data)
   data = new Uint8Array(data);
-  console.log("OUT", data);
+  //console.log("OUT", data);
   if(this.id){
     chrome.serial.send(this.id, data.buffer, onWrite);
-	console.log(data.buffer)
+	//console.log(data.buffer)
   }
 
 };

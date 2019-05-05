@@ -76,18 +76,24 @@ MIDI_RESPONSE[REPORT_VERSION] = function(board) {
  * @private
  * @param {Board} board the current arduino board we are working with.
  */
-
+ 
 MIDI_RESPONSE[ANALOG_MESSAGE] = function(board) {
+    //console.log("gonna send an analog message");
     var value = board.currentBuffer[1] | (board.currentBuffer[2] << 7);
-    var port = board.currentBuffer[0] & 0x0F;
-    if (board.pins[board.analogPins[port]]) {
-        board.pins[board.analogPins[port]].value = value;
+    //console.log("gonna send an analog message1");
+    var pinNumber = board.currentBuffer[0] & 0x0F;
+    //console.log("gonna send an analog message2 " + pinNumber);
+    //console.log("gonna send an analog message2.1 " + board.analogPins[pinNumber]);
+    //console.log("gonna send an analog message2.2 " + board.pins[board.analogPins[pinNumber]]);
+    if (board.pins[board.analogPins[pinNumber]]) {
+        //console.log("gonna send an analog message3" + pinNumber);
+      if (!(board.pins[board.analogPins[pinNumber]].value == value)) {
+        board.pins[board.analogPins[pinNumber]].value = value;
+        //console.log("sending analog message " + pinNumber + "  " +value);
+        transmit_analog_message(pinNumber, value);
+      }
     }
-    //board.emit('analog-read-' + port, value);
-    //board.emit('analog-read', {
-    //    pin: port,
-    //    value: value
-    //});
+
 };
 
 /**
@@ -363,19 +369,19 @@ Board.prototype.initialize = async function() {
 */
 
 Board.prototype.message_dispatch = function(data) {
-  console.log(data);
-  console.log(board.currentBuffer);
-  console.log(board.currentBuffer.length);
+  //console.log("dispatching message " + data);
+  //console.log("current buffer " + board.currentBuffer);
+  //console.log("buflen " + board.currentBuffer.length);
 	var byt, cmd;
 
 	if (!board.versionReceived && data[0] !== REPORT_VERSION) {
 	  console.log("not versioned yet");
 		return;
 	} else {
-	  console.log("ok versioned versioned yet");
+	  //console.log("ok versioned versioned");
 		board.versionReceived = true;
 	}
-  console.log("trying to dispatch");
+  //console.log("trying to dispatch");
   
 	for (var i = 0; i < data.length; i++) {
 		byt = data[i];
@@ -384,14 +390,14 @@ Board.prototype.message_dispatch = function(data) {
 			continue;
 		} else {
 			board.currentBuffer.push(byt);
-      console.log(board.currentBuffer);
+      //console.log(board.currentBuffer);
 			// [START_SYSEX, ... END_SYSEX]
 			if (board.currentBuffer[0] === START_SYSEX &&
 			  SYSEX_RESPONSE[board.currentBuffer[1]] &&
 				board.currentBuffer[board.currentBuffer.length - 1] === END_SYSEX) {
 
-        console.log("we have a SYSEX message");
-				console.log(board.currentBuffer[1]);
+        //console.log("we have a SYSEX message");
+				//console.log(board.currentBuffer[1]);
 				
 				SYSEX_RESPONSE[board.currentBuffer[1]](board);
 				board.currentBuffer.length = 0;
@@ -408,8 +414,8 @@ Board.prototype.message_dispatch = function(data) {
 				}
 
 				if (MIDI_RESPONSE[cmd]) {
-				  console.log("we have a MIDI_RESPONSE");
-				  console.log(cmd);
+				  //console.log("we have a MIDI_RESPONSE");
+				  //console.log(cmd);
 					MIDI_RESPONSE[cmd](board);
 					board.currentBuffer.length = 0;
 				}
@@ -573,7 +579,7 @@ Board.prototype.servoConfig = function(pin, min_pulse, max_pulse) {
  */
 
 Board.prototype.analogWrite = function(pin, value) {
-    console.log("Called analog write", pin, value)
+    //console.log("Called analog write", pin, value)
     this.pins[pin].value = value;
     this.sp.write([ANALOG_MESSAGE | pin, value & 0x7F, (value >> 7) & 0x7F]);
 };

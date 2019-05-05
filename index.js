@@ -29,39 +29,39 @@ var selectBtn;
 window.onload = function() {
   selectBtn = document.getElementById("connectButton"); //RBD: Button is created on Index.html now
   boardImage = document.getElementById("boardImage"); //RBD to be used to modify board image later
-}
 
-chrome.serial.getDevices(function (queriedPorts) {
-  selectList = document.getElementById("WildCardsLinkSerialPortList");  //RBD: Moved WildCardsLinkSerialPortList to index.html
-  //selectList.id = "WildCardsLinkSerialPortList";
-  
-  for (var i = 0; i < queriedPorts.length; i++) {
-    var option = document.createElement("option");
-    option.value = i;
-    option.text = queriedPorts[i].path;
-    selectList.appendChild(option);
-  }
-  
-  
-  boardImage.className = "inactiveImg"; //RBD Grey out the image using CSS class
-  selectBtn.disabled = true; //RBD: Button disables until a USB device is connected. Enabling of the button click is in the promise
-  
-  selectBtn.addEventListener('click', function() {
-    console.log('clicked',selectList.selectedIndex);
-    //RBD: Using the button text to determine what action to take on the button
-    //     If "connect", then er uh....connect. Will need to add disconnect?
-    if (selectBtn.innerHTML == "Connect"){
-      connect(selectList.options[selectList.selectedIndex].text);
-      initialize();
-      selectBtn = document.getElementById("connectButton").innerHTML = "Connecting...";
-    }else if(selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Re-Launch Scratch"){
-      console.log('Scratch Launched');
-      window.open("https://scratch.wildcards.io");
+
+  chrome.serial.getDevices(function (queriedPorts) {
+    selectList = document.getElementById("WildCardsLinkSerialPortList");  //RBD: Moved WildCardsLinkSerialPortList to index.html
+    //selectList.id = "WildCardsLinkSerialPortList";
+    
+    for (var i = 0; i < queriedPorts.length; i++) {
+      var option = document.createElement("option");
+      option.value = i;
+      option.text = queriedPorts[i].path;
+      selectList.appendChild(option);
     }
     
-  }, false);
-});
-
+    
+    boardImage.className = "inactiveImg"; //RBD Grey out the image using CSS class
+    selectBtn.disabled = true; //RBD: Button disables until a USB device is connected. Enabling of the button click is in the promise
+    
+    selectBtn.addEventListener('click', function() {
+      console.log('clicked',selectList.selectedIndex);
+      //RBD: Using the button text to determine what action to take on the button
+      //     If "connect", then er uh....connect. Will need to add disconnect?
+      if (selectBtn.innerHTML == "Connect"){
+        connect(selectList.options[selectList.selectedIndex].text);
+        initialize();
+        selectBtn = document.getElementById("connectButton").innerHTML = "Connecting...";
+      }else if(selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Re-Launch Scratch"){
+        console.log('Scratch Launched');
+        window.open("https://scratch.wildcards.io");
+      }
+      
+    }, false);
+  });
+}
 //}
 
 
@@ -97,6 +97,7 @@ async function initialize() {
   console.log("qc");
   board.queryCapabilities();
   console.log("qcd")
+  board.queryAnalogMapping();
 }
 
 function onChange(evt) {
@@ -199,9 +200,9 @@ if (http.Server && http.WebSocketServer) {
       //for (var i = 0; i < connectedSockets.length; i++)
         //connectedSockets[i].send(e.data);
         //Parse the message and repackage to serial stream
-        console.log('socket received event: message')
+        //console.log('socket received event: message')
         var msg = JSON.parse(e.data);
-        console.log("length: ",msg.params.length);
+        //console.log("length: ",msg.params.length);
         //RBD: Using this listener to indicate that the extension has been loaded.
         if(selectBtn.innerHTML == "Launch Scratch" || selectBtn.innerHTML == "Re-Launch Scratch"){
           selectBtn.innerHTML = "Extension Loaded";
@@ -209,7 +210,7 @@ if (http.Server && http.WebSocketServer) {
         }
         
         for (i = 0; i < msg.params.length; i++) {
-          console.log(msg.params[i]);
+          //console.log(msg.params[i]);
         }
         
         switch (msg.method){
@@ -238,7 +239,7 @@ if (http.Server && http.WebSocketServer) {
             board.servoConfig(parseInt(msg.params[0]), parseInt(msg.params[1]), parseInt(msg.params[2])); //params: pin,min_pulse, max_pulse
             break;
           case "analog_write":
-            console.log(msg)
+            //console.log(msg)
             board.analogWrite(parseInt(msg.params[0]), parseInt(msg.params[1])); //params: pin,value
             break;
             
@@ -249,7 +250,7 @@ if (http.Server && http.WebSocketServer) {
 
     // When a socket is closed, remove it from the list of connected sockets.
     socket.addEventListener('close', function() {
-      console.log('Client disconnected'); //RBD: Used console.log
+      console.log('Client disconnected');
       //RBD: Indicate that scratch has been closed
       if(selectBtn.innerHTML == "Extension Loaded") {
           selectBtn.className = "btn btn-danger btn-lg";
@@ -267,8 +268,7 @@ if (http.Server && http.WebSocketServer) {
 }
 
 function transmit_digital_message(pin, value) {
-  console.log("Slippin' Jimmy, faking sending analog pin " + pin + " and value " + value + " over the websocket...")
-
+    console.log("Slippin' Jimmy, faking sending analog pin " + pin + " and value " + value + " over the websocket...")
   var msg = JSON.stringify({"method": "digital_message_reply", "params": [pin, value.toString()]});
   console.log("message generated");
   for (var i = 0; i < connectedSockets.length; i++)
@@ -279,42 +279,20 @@ function transmit_digital_message(pin, value) {
 }
 
 function transmit_analog_message(pin, value) {
-  console.log("Slippin' Jimmy, faking sending pin " + pin + " and value " + value + " over the websocket...");
+  //console.log("Slippin' Jimmy, faking sending pin " + pin + " and value " + value + " over the websocket...");
   var msg = JSON.stringify({"method": "analog_message_reply", "params": [pin, value.toString()]});
-  window.ws.send(msg);
+  //console.log("analog message generated");
+  for (var i = 0; i < connectedSockets.length; i++)
+    connectedSockets[i].send(msg);
+  //window.ws.send(msg);
+  //console.log("analog message sent...  ", msg);
 }
 
 
 document.addEventListener('DOMContentLoaded', function() {
-  debugger;
-  console.log("ok"); //RBD: Used console.log
-  console.log('Setting up WebSocket on port ' + port); //RBD: Used console.log
-// FIXME: Wait for 1s so that HTTP Server socket is listening...
-setTimeout(function() {
-  var address = isServer ? 'ws://localhost:' + port + '/' :
-      window.location.href.replace('http', 'ws');
-  window.ws = new WebSocket(address);
-  window.ws.addEventListener('open', function() {
-    console.log('Connected'); //RBD: Used console.log
-      
-  });
-  window.ws.addEventListener('close', function() {
-    console.log('Connection lost'); //RBD: Used console.log
-    $('input').disabled = true;
-  });
-  window.ws.addEventListener('message', function(e) {
-    log(e.data);
-  });
-  $('input').addEventListener('keydown', function(e) {
-    if (window.ws && window.ws.readyState == 1 && e.keyCode == 13) {
-      window.ws.send(this.value);
-      this.value = '';
-    }
-  });
-}, 1e3);
+  //debugger;
+  console.log("DOMContentLoaded");
 });
-
-
 
 
 
@@ -358,54 +336,6 @@ var promiseKeepUpdatingSerialDeviceList = new Promise(async function(resolve, re
           boardImage.className = "activeImg";
         }
       }
-    //start by setting all ports to not display
-    /*
-    for(var key in serialList) {
-      serialList[key].ready = false;
-    }
-    
-    chrome.serial.getDevices(function (queriedPorts) {
-      console.log(queriedPorts);
-      console.log(selectList);
-      ports = queriedPorts;
-      
-      for (var i = 0; i < ports.length; i++) {
-        //if the port is found, mark that it is ready
-        if (serialList[ports[i].path]) {
-          serialList[ports[i].path].ready = true;
-        }
-        //or create it if needed
-        else {
-          serialList[ports[i].path] = new serialPort(true, i, ports[i].path)
-          serialList[ports[i].path].ready = true;
-          serialList[ports[i].path].index = Object.keys(serialList).length-1;
-          serialList[ports[i].path].path = ports[i].path;
-        }
-      }
-      
-      //need to try disable, etc. or just give up on index???
-      for(var key in serialList) {
-        if (serialList[key].index >= selectList.options.length) {
-          var option = document.createElement("option");
-          option.value = serialList[key].index;
-          option.text = serialList[key].path;
-          selectList.appendChild(option);
-        }
-        else if (serialList[key].ready) {
-          var option = document.createElement("option");
-          option.value = serialList[key].index;
-          option.text = serialList[key].path;
-          selectList.options[serialList[key].index] = option;
-        }
-        else {
-          selectList.options[serialList[key].index] = null;
-        }
-  
-  
-          //console.log(option);
-          //console.log(selectList);
-      }
-      */
     });
     await asyncsleep(2000);
     //console.log("done waiting again")
